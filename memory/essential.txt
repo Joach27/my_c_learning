@@ -1,0 +1,86 @@
+// LES SEGMENTS DE MEMOIRE //
+
++--------------------+
+| Stack              | ← Haut de la mémoire (adresses élevées)
+| (variables locales)|
++--------------------+
+| Heap               |
+| (malloc, new)      |
++--------------------+
+| BSS (.bss)         |
+| (globals non init) |
++--------------------+
+| Data (.data)       |
+| (globals init)     |
++--------------------+
+| RO Data (.rodata)  |
+| (consts, strings)  |
++--------------------+
+| Code (.text)       | ← Bas de la mémoire (adresses basses)
+| (instructions)     |
++--------------------+
+
+
+
+// ADRESSE DE RETOUR //
+L'adresse de retour indique où reprendre après une fonction
+
+Avant l'appel de foo()
+Stack:
++------------------+
+| ...              |
++------------------+
+
+Après `call foo` :
+Stack:
++------------------+
+| Adresse de retour ← où revenir après foo
++------------------+
+| Ancien RBP       |
++------------------+
+
+
+// IMPORTANCE //
+Sécurité : Des attaques comme le buffer overflow visent à écraser l’adresse de retour pour rediriger le programme vers du code malicieux (ex. shellcode).
+
+Fonctionnement du call stack : Sans l’adresse de retour, le programme ne saurait jamais où revenir après une fonction.
+
+
+//////////////// CE QUI SE PASSE QUAND ON FAIT APPEL A UNE FONCTIO ///////////////
+
+Les régistres qui son utilisés 
+-- EBP (Base pointer) : pointer de base qui référencie les variables locales et les paramètres
+-- ESP (Stack pointer) : pointeur de pile qui gère l'allocation de la pile (pointe vers le haut de la pile)
+-- EIP (Instruction pointer) : pointeur d'instruction qui indique l'instruction en cours d'exécution
+
+1. Chargement des paramètres dans les registres (ou sur la pile si il y en a trop, de droite à gauche)
+2. Sauvegarde de l'adresse de retour (EIP) sur la pile
+3. Sauvegarde de l'ancien EBP (EBP) sur la pile
+4. Mise à jour de EBP avec la valeur de ESP (pointe vers le haut de la pile)
+5. Allocation de la pile pour les variables locales
+
+
+//// ETAPE 3 DE L'APPEL DE FONCTION (FONCTION add) ////
+
+Situation avant l'Étape 3 (juste après l'instruction CALL)
+Les paramètres ont été poussés sur la pile par la fonction appelante (main).
+L'instruction CALL add a poussé l'adresse de retour (OLD EIP) sur la pile.
+EIP pointe maintenant vers la première instruction de la fonction add.
+ESP (Stack Pointer) pointe vers l'adresse de retour (OLD EIP) qui est actuellement au sommet de la pile.
+EBP (Base Pointer) pointe toujours vers le bas du cadre de pile de la fonction appelante (main). Il n'a pas encore été modifié par la fonction add.
+
+        Adresse Mémoire Inférieure
+        ^
+        |
+        +-----------------+
+        | ... (espace vide) ...    |
+        +-----------------+ <-- ESP pointe ici (vers OLD EIP)
+        | Adresse Retour (OLD EIP) |
+        +-----------------+        |
+        | Paramètre 1 (10)         |
+        +-----------------+        |
+        | Paramètre 2 (20)         |
+        +-----------------+
+        | ... cadre de pile de main ...  | <-- EBP (de main) pointe quelque part ici
+        v
+        Adresse Mémoire Supérieure
