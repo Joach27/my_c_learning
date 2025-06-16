@@ -37,7 +37,7 @@ Stack:
 | Adresse de retour ← où revenir après foo
 +------------------+
 | Ancien RBP       |
-+------------------+
++------------------+ 
 
 
 // IMPORTANCE //
@@ -46,7 +46,7 @@ Sécurité : Des attaques comme le buffer overflow visent à écraser l’adress
 Fonctionnement du call stack : Sans l’adresse de retour, le programme ne saurait jamais où revenir après une fonction.
 
 
-//////////////// CE QUI SE PASSE QUAND ON FAIT APPEL A UNE FONCTIO ///////////////
+//////////////// CE QUI SE PASSE QUAND ON FAIT APPEL A UNE FONCTION ///////////////
 
 Les régistres qui son utilisés 
 -- EBP (Base pointer) : pointer de base qui référencie les variables locales et les paramètres
@@ -84,3 +84,30 @@ EBP (Base Pointer) pointe toujours vers le bas du cadre de pile de la fonction a
         | ... cadre de pile de main ...  | <-- EBP (de main) pointe quelque part ici
         v
         Adresse Mémoire Supérieure
+
+
+/// VIRTUAL MEMORY ///
+L'espace d'adressage virtuel est une abstraction faite par le système pour faire croire à un processus qu'il a toute la mémoire pour lui seul, alors qu'en réalité elle est partagée entre tous les processus
+
+0xFFFFFFFF  ← Adresse la plus haute
+   |
+   |  Kernel Stack     ← Inaccessible au processus utilisateur
+   |
+0x7FFFFFFF  ← Limite entre l’espace utilisateur et l’espace noyau
+   |
+   |  Stack            ← Croît vers le bas
+   |
+   |  Data + Heap      ← Variables globales, malloc
+   |
+   |  Text             ← Contient le code machine du programme
+   |
+0x00000000  ← Adresse la plus basse
+
+| Concept                | Description                                                     |
+| ---------------------- | --------------------------------------------------------------- |
+| **Espace virtuel**     | Vue isolée que chaque processus a de la mémoire.                |
+| **Isolation**          | Les processus ne peuvent pas accéder à la mémoire des autres.   |
+| **Partie utilisateur** | De `0x00000000` à `0x7FFFFFFF` (code, données, heap, stack).    |
+| **Partie noyau**       | De `0x80000000` à `0xFFFFFFFF` – protégée, réservée au système. |
+| **Avantage**           | Sécurité, stabilité, simplicité de programmation.               |
+
