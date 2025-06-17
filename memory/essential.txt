@@ -39,6 +39,23 @@ Stack:
 | Ancien RBP       |
 +------------------+ 
 
+/// VALEUR RETOURNEE PAR LA FONCTION ET L'ADRESSE DE RETOUR ///
+✅ 1. Valeur de retour → registre (EAX ou RAX)
+Quand une fonction retourne une valeur (ex : un int), le résultat est stocké dans un registre du processeur :
+
+EAX si le programme est en 32 bits
+
+RAX si le programme est en 64 bits
+
+➡️ La fonction appelante lit simplement ce registre pour récupérer la valeur de retour.
+
+✅ 2. Adresse de retour → stack
+Quand une fonction est appelée, le programme doit se souvenir où reprendre l’exécution après la fin de cette fonction.
+
+Cette adresse de retour est poussée (placée) sur la pile avant que la fonction ne commence à s’exécuter.
+
+➡️ À la fin de la fonction, l'instruction ret lit cette adresse sur la pile et reprend l’exécution à cet endroit-là.
+
 
 // IMPORTANCE //
 Sécurité : Des attaques comme le buffer overflow visent à écraser l’adresse de retour pour rediriger le programme vers du code malicieux (ex. shellcode).
@@ -111,3 +128,113 @@ L'espace d'adressage virtuel est une abstraction faite par le système pour fair
 | **Partie noyau**       | De `0x80000000` à `0xFFFFFFFF` – protégée, réservée au système. |
 | **Avantage**           | Sécurité, stabilité, simplicité de programmation.               |
 
+
+//////////////TRADUCTION D'UNE ADRESSE VIRTUAL EN ADRESSE MEMOIRE////////////
+
+
+## 🧠 **Définition rapide**
+
+* **Adresse virtuelle (VA)** : Adresse utilisée par un programme (processus) pour accéder à la mémoire.
+* **Adresse physique (PA)** : Adresse réelle en mémoire vive (RAM).
+
+Un programme ne voit jamais les vraies adresses physiques : le système d’exploitation (OS) et le **MMU** (Memory Management Unit) traduisent les adresses virtuelles en adresses physiques **à la volée**.
+
+---
+
+## 🧱 **Les étapes de la traduction VA → PA**
+
+### 1. **Segmentation (parfois utilisée dans les vieux systèmes)**
+
+* L'adresse virtuelle est divisée en **segment + offset**.
+* Le système regarde dans une **table des segments** pour savoir où commence ce segment en mémoire physique.
+
+Mais de nos jours, la **pagination** est plus courante. 👇
+
+---
+
+### 2. ✅ **Pagination (méthode moderne la plus utilisée)**
+
+1. **L'espace virtuel** est découpé en **pages** (souvent 4 Ko).
+2. **La RAM physique** est divisée en **cadres (frames)** de même taille.
+3. L’OS maintient une **table des pages** (Page Table), par processus.
+
+### 🔄 Traduction d’adresse :
+
+* Une **adresse virtuelle** est divisée en :
+
+  * `Page Number` (index dans la page table)
+  * `Offset` (déplacement à l’intérieur de la page)
+
+* Le **MMU** (un circuit matériel) fait :
+
+  ```text
+  VA = Page Number + Offset
+      ↓ (traduction avec la Page Table)
+  PA = Frame Number (physique) + Offset
+  ```
+
+---
+
+### 📦 Exemple :
+
+Supposons une adresse virtuelle `0x00002ABC` :
+
+* Taille des pages : 4 Ko (4096 octets)
+  → donc 12 bits pour l’offset, le reste pour le numéro de page.
+
+* **Page Number** : bits[31:12] → `0x00002`
+
+* **Offset** : bits[11:0] → `0xABC`
+
+La page `0x00002` est mappée (dans la page table) au **cadre physique** `0x0015`.
+
+➡️ **Adresse physique =** `0x0015ABC`
+
+---
+
+### 🔐 Bonus : la protection mémoire
+
+* Chaque processus a sa **propre table des pages**.
+* Cela empêche un processus d’accéder à la mémoire d’un autre → **isolation et sécurité**.
+
+---
+
+## 🧠 Résumé en une phrase :
+
+> L'adresse virtuelle utilisée par un programme est traduite dynamiquement par le **MMU**, en consultant la **page table**, pour obtenir l'adresse physique réelle en RAM.
+
+//// PAGE TABLE ////
+
+L’adresse virtuelle est divisée en :
+        Numéro de page (Virtual Page) → sert d’index
+        Offset → position à l’intérieur de la page
+
+Le numéro de page permet d’accéder à la table des pages.
+
+La table des pages contient : 
+    ->La Page Table contient une entrée pour chaque numéro de page virtuelle possible.
+
+        Un bit VALID (présente ou non en mémoire)
+        L’adresse de la page physique (si valide)
+        Sinon, l’adresse sur le disque de swap
+
+Si la page est valide, on combine :
+        L’adresse de la page physique
+                le offset
+                        → pour obtenir l’adresse physique finale.
+
+
+Adresse virtuelle :   [ Page number | Offset ]
+                            |
+                            V
+                     Page Table Lookup
+                            |
+                +-----------+-----------+
+                | VALID = 1 | Frame #42 |
+                +-----------+-----------+
+                            |
+                    Physical Frame #42
+                            + Offset
+                            |
+                            V
+                  Adresse physique finale
