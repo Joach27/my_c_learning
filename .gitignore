@@ -1,0 +1,17 @@
+# Fichiers de compilation
+*.o
+*.obj
+*.out
+*.exe
+*.elf
+
+# Fichiers de debug
+*.log
+*.gdb
+
+# Répertoire de build
+/build/
+
+# Sauvegardes d'éditeurs
+*~
+*.swp
