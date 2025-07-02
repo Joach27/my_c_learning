@@ -5,7 +5,7 @@ EXEC = game
 BUILD_DIR = build
 
 # Fichiers source
-SRCS = main.c board.c
+SRCS = main.c board.c game.c
 
 # Fichiers objets dans le dossier build
 OBJS = $(SRCS:.c=.o)
