@@ -1,7 +1,5 @@
 // utils.c
 #include "utils.h"
-#include <stdio.h>
-#include <string.h>
 
 void copy_until(char* dest, const char* src, char stop) {
     int i = 0;

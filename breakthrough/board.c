@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -21,10 +20,10 @@ void fill_array(int** arr, int n){
     for (int i=0; i<n; i++){
         for (int j=0; j<n; j++){
             if (i<2){
-                 arr[i][j] = 1;
+                 arr[i][j] = 2;
             }
             else if (i>=n-2 && i<=n-1){
-                arr[i][j] = 2;
+                arr[i][j] = 1;
             } 
             else {
                 arr[i][j] = 0;
@@ -45,12 +44,12 @@ void print_board(int** arr, int n){
     // Remplir la matrice board
     for (int i = 0; i < n; i++){
         for (int j = 0; j < n; j++){
-            if (arr[i][j] == 1)
+            if (arr[i][j] == 2)
                 board[i][j] = 'B';
-            else if (arr[i][j] == 2)
+            else if (arr[i][j] == 1)
                 board[i][j] = 'W';
             else
-                board[i][j] = '*';
+                board[i][j] = '.';
         }
     }
 

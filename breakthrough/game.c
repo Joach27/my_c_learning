@@ -10,21 +10,13 @@
 // Checking the winner
 int winner(int** board, int n)
 {
-    for (int i=0; i<n; i++){
-        for (int j=0; j<n; j++){
-            if (board[i][j] == 1 && i == n-1){
-                return 1;
-            }
-            else if (board[i][j] == 2 && i == 0) {
-                return 2;
-            }
-            else {
-                return 0;
-            }
-        }
+    for (int j = 0; j < n; j++) {
+        if (board[0][j] == 1) return 1;       // pion blanc arrivé en haut
+        if (board[n-1][j] == 2) return 2;     // pion noir arrivé en bas
     }
     return 0;
 }
+
 
 // Check if the position is on the board
 bool is_in_the_board(int n, int x, int y){
@@ -47,17 +39,23 @@ char* input_move() {
     }
 
     char input[30];
+    int match;
     do {
-        printf("Entrez une chaîne de caractères : ");
+        printf("Entrez un coup : ");
+        // int c;
+        // while ((c = getchar()) != '\n' && c != EOF);  // vide le tampon
+
         fgets(input, sizeof(input), stdin);
         if (input[strlen(input) - 1] == '\n') {
             input[strlen(input) - 1] = '\0';
         }
 
-        if (regexec(&regex, input, 5, matches, 0) != 0) {
+        match = regexec(&regex, input, 5, matches, 0);
+        if (match != 0) {
             printf("Format incorrect, veuillez réessayer.\n");
         }
-    } while (regexec(&regex, input, 5, matches, 0) != 0);
+        
+    } while (match != 0);
 
     regfree(&regex);
 
@@ -86,41 +84,44 @@ void extract_pos(const char* pos_str, int n, int* i, int* j) {
 // Cheking the move int check_move : vérifie si les coups respectent les règles
 int check_move(int** board, int n, int player, char* move_str)
 {
-    // move format : a1>b2
-    char* source;
+    char source[30];
     copy_until(source, move_str, '>');
-    
-    int len_source = strlen(source);
-    char* destination = move_str+(len_source+1);
-    
-    // Extrating positions
-    int i_source, j_source;
-    extract_pos(source, n, &i_source, &j_source);
-    
-    int i_destination, j_destination;
-    extract_pos(destination, n, &i_destination, &j_destination);
-    
-    if ((player == 1) && (i_source < i_destination) && is_in_the_board(n, i_source, j_source) && is_in_the_board(n, i_destination, j_destination))
-    { 
-        if ((board[i_destination][j_destination] == 0 || board[i_destination][j_destination] == 2) && ((j_destination == j_source + 1 || j_destination == j_source - 1 || j_destination == j_source)) ){
-            return 1;
-        }
+    char* destination = move_str + strlen(source) + 1;
+
+    int i_src, j_src, i_dst, j_dst;
+    extract_pos(source, n, &i_src, &j_src);
+    extract_pos(destination, n, &i_dst, &j_dst);
+
+    if (!is_in_the_board(n, i_src, j_src) || !is_in_the_board(n, i_dst, j_dst)) {
+        return 0;
     }
-    if ((player == 2) && (i_source > i_destination) && is_in_the_board(n, i_source, j_source) && is_in_the_board(n, i_destination, j_destination))
-    { 
-        if ((board[i_destination][j_destination] == 0 || board[i_destination][j_destination] == 1) && ((j_destination == j_source + 1 || j_destination == j_source - 1 || j_destination == j_source)) ){
-            return 1;
-        }
+    
+    if (board[i_src][j_src] != player) {
+        return 0;
+    }
+
+
+    if (player == 1 && i_dst == i_src - 1) {
+        // Avancer tout droit
+        if (j_dst == j_src && board[i_dst][j_dst] == 0) return 1;
+        // Diagonale pour capturer
+        if ((j_dst == j_src - 1 || j_dst == j_src + 1) && (board[i_dst][j_dst] == 2 || board[i_dst][j_dst] == 0)) return 1;
+    }
+
+    if (player == 2 && i_dst == i_src + 1) {
+        if (j_dst == j_src && board[i_dst][j_dst] == 0) return 1;
+        if ((j_dst == j_src - 1 || j_dst == j_src + 1) && (board[i_dst][j_dst] == 1 || board[i_dst][j_dst] == 0)) return 1;
     }
 
     return 0;
 }
 
+
 // void play_move: Met à jour le plateau après un coup valide
 void play_move(int** board, int n, char* move_str, int player)
 {
     // move format : a1>b2
-    char* source;
+    char source[30];
     copy_until(source, move_str, '>');
     
     int len_source = strlen(source);
@@ -138,5 +139,6 @@ void play_move(int** board, int n, char* move_str, int player)
     
     if (valide_coup == 1){
         board[i_destination][j_destination] = player;
+        board[i_source][j_source] = 0;
     }
 }
