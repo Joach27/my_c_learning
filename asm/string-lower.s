@@ -1,31 +1,41 @@
 .intel_syntax noprefix
 .global str_lower
 
+# -----------------------------
+# pwn college
+# -----------------------------
+
 str_lower:
-    xor rcx, rcx               # compteur = 0
+    xor rcx, rcx                # i = 0
 
-.loop:
-    movzx rax, byte ptr [rdi]  # lire octet
-    test rax, rax
-    je .done
+    test rdi, rdi               # src_addr == NULL ?
+    je done
 
-    cmp rax, 0x41              # 'A'
-    jl .skip_call
-    cmp rax, 0x5A              # 'Z'
-    jg .skip_call
+while_loop:
+    mov dl, byte ptr [rdi]      # dl = *rdi [str_addr] valeur stockée à l'adresse qui est dans rdi
 
-    inc rcx                    # compteur++
+    test dl, dl                 # fin de chaîne ?
+    je done
 
-    mov rsi, rdi               # sauvegarder l’adresse dans rsi
-    mov rdi, rax               # caractère à passer à foo
-    call foo
-    mov byte ptr [rsi], al     # écrire le résultat
-    mov rdi, rsi               # restaurer rdi
+    cmp dl, 0x5a                # 'Z'
+    jg next                     # si > 'Z', on ne traite pas
 
-.skip_call:
-    inc rdi                    # avancer dans la chaîne
-    jmp .loop
+    push rdi                    # sauver rdi
+    xor rdi, rdi                # nettoyer rdi
+    mov dil, dl                 # mettre dl en dil (1er argument)
+    mov rbx, 0x403000           # mettre l'adresse de la fonction foo dans rbx 
+    call rbx                    # appel à foo
+    mov dl, al                  # résultat dans dl
+    pop rdi                     # restaurer rdi
+    mov [rdi], dl               # *rdi = résultat
+    inc rcx                     # compteur++
 
-.done:
-    mov rax, rcx
+    # on ne saute pas ici !
+
+next:
+    inc rdi                     # avancer dans la chaîne
+    jmp while_loop
+
+done:
+    mov rax, rcx                # retour : nb de modifs
     ret
